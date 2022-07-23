@@ -6,6 +6,9 @@ public class Forage : SurvivalCard
 {
     protected override void PlayWithSelections(params object[] selections)
     {
-        PlayerResources.Food += Random.Range(0, 3);
+        PlayerResources.Food += 1;
     }
+
+    public override string Name => "Forage";
+    public override string Description => "+1 Food";
 }

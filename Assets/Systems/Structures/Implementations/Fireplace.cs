@@ -4,5 +4,5 @@ using UnityEngine;
 
 public class Fireplace : StructureBase
 {
-    public override int BuildCosts() => 1;
+    public override int BuildCosts() => 1;    
 }

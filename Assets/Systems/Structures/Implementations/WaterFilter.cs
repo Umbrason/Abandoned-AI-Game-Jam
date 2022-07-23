@@ -2,17 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class WaterFilter : MonoBehaviour
+public class WaterFilter : StructureBase
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    public override int BuildCosts() => 1;
+    public override void OnBeginTurn() => PlayerResources.Water += 2;
 }

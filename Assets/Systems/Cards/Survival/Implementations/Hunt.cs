@@ -8,8 +8,10 @@ public class Hunt : SurvivalCard
 
     protected override void PlayWithSelections(params object[] selections)
     {
-        PlayerResources.Food += Random.Range(2, 5);
-        if (Random.Range(0, 1f) < HURT_CHANCE)
-            GameplayManager.Instance.SurvivalDeck.ShuffleCardsInto(Deck<SurvivalCard>.Section.DrawPile, new Injury());
+        PlayerResources.Food += 2;
+        if (Random.Range(0, 1f) < HURT_CHANCE && !GameplayManager.IsStructureBuild<HuntingCamp>())
+            GameplayManager.Instance.SurvivalDeck.ShuffleNewCardsInto(Deck.Section.DrawPile, new Injury());
     }
+    public override string Name => "Hunt";
+    public override string Description => "+2 food\nHas a 20% chance to\nadd an injury to your deck";
 }

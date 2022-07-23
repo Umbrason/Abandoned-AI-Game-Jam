@@ -9,6 +9,9 @@ public class AnimalAttack : HazardCard
     {
         if (GameplayManager.IsStructureBuild<Shelter>())
             return;
-        GameplayManager.Instance.SurvivalDeck.ShuffleCardsInto(Deck<SurvivalCard>.Section.Hand, new Injury());
+        GameplayManager.Instance.SurvivalDeck.ShuffleNewCardsInto(Deck.Section.Hand, new Injury());
     }
+
+    public override string Name => "Wild Animals";
+    public override string Description => "adds an injury to your deck unless you built a Shelter";
 }

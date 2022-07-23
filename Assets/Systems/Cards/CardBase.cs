@@ -9,4 +9,6 @@ public abstract class CardBase
     public virtual void OnDraw() { }
     public virtual void OnEndTurn() { }
 
+    public abstract string Name { get; }
+    public abstract string Description { get; }
 }

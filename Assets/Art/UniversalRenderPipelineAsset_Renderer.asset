@@ -52,7 +52,7 @@ MonoBehaviour:
   settings:
     renderPassEvent: 1000
     blurMaterial: {fileID: 2100000, guid: eb8e5052b946bcd4296435b5c6986a5f, type: 2}
-    blurPasses: 5
+    blurPasses: 3
     downsample: 2
     copyToFramebuffer: 0
     targetName: _blurTexture

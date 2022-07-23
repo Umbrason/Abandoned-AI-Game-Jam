@@ -7,4 +7,7 @@ public class TropicalRain : HazardCard
             return;
         PlayerResources.Food = 0;        
     }
+
+    public override string Name => "Tropical Storm";
+    public override string Description => "+2 Water\n Loose all food unless you built a fireplace";
 }

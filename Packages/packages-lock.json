@@ -1,11 +1,10 @@
 {
   "dependencies": {
     "com.umbrason.scriptableobjectlibraries": {
-      "version": "https://github.com/Umbrason/ScriptableObjectLibraries.git",
+      "version": "file:D:/.UnityProjects/VoxelCardRPGEngineHDRP/CustomPackages/ScripatbleObject Libraries",
       "depth": 0,
-      "source": "git",
-      "dependencies": {},
-      "hash": "fe46ab18c10e2096b06d2ba35047fa3d1b4cf4da"
+      "source": "local",
+      "dependencies": {}
     },
     "com.unity.2d.sprite": {
       "version": "1.0.0",

@@ -2,31 +2,37 @@ using System.Collections.Generic;
 using System.Collections;
 using System.Linq;
 using System;
+using UnityEngine;
 
-public class Deck<T> where T : CardBase
+public class Deck
 {
-    private readonly Dictionary<Section, List<T>> deckSections;
-    public T[] AllCards { get { return deckSections.Values.SelectMany(x => x).ToArray(); } }
+    private readonly Dictionary<Section, List<CardBase>> deckSections;
+    public CardBase[] AllCards { get { return deckSections.Values.SelectMany(x => x).ToArray(); } }
 
-    public event Action<Section, IEnumerable<T>> OnSectionChanged;
+    public event Action<Section, IEnumerable<CardBase>> OnSectionChanged;
 
     public enum Section { DrawPile, Hand, DiscardPile }
-    private IEnumerable<T> this[Section index]
+    private IEnumerable<CardBase> this[Section index]
     {
-        get { return (deckSections[index] ??= new List<T>()).ToArray(); }
-        set { deckSections[index].Clear(); deckSections[index].AddRange(value); }
+        get { return (deckSections[index] ??= new List<CardBase>()).ToArray(); }
+        set
+        {
+            deckSections[index].Clear();
+            deckSections[index].AddRange(value);
+            OnSectionChanged?.Invoke(index, this[index]);
+        }
     }
-    public T[] DrawPile
+    public CardBase[] DrawPile
     {
         get { return this[Section.DrawPile].ToArray(); }
         set { this[Section.DrawPile] = value; }
     }
-    public T[] Hand
+    public CardBase[] Hand
     {
         get { return this[Section.Hand].ToArray(); }
         set { this[Section.Hand] = value; }
     }
-    public T[] DiscardPile
+    public CardBase[] DiscardPile
     {
         get { return this[Section.DiscardPile].ToArray(); }
         set { this[Section.DiscardPile] = value; }
@@ -34,67 +40,88 @@ public class Deck<T> where T : CardBase
 
 
 
-    public Deck(params T[] cards)
+    public Deck(params CardBase[] cards)
     {
         var sectionEnumValues = Enum.GetValues(typeof(Section));
-        deckSections = new Dictionary<Section, List<T>>();
+        deckSections = new Dictionary<Section, List<CardBase>>();
+        foreach (Section section in Enum.GetValues(typeof(Section)))
+            deckSections.Add(section, new List<CardBase>());
     }
 
-    public void ShuffleCardsInto(Section targetSection, params T[] cards)
+    public void ShuffleNewCardsInto(Section targetSection, params CardBase[] cards)
     {
-        var rand = new Random();
+        var rand = new System.Random();
         this[targetSection] = this[targetSection].Concat(cards).OrderBy(x => rand.Next()).ToArray();
         OnSectionChanged?.Invoke(targetSection, this[targetSection]);
     }
 
-    public void ShuffleSectionsInto(Section[] sourceSections, Section targetSection)
-    {
-        var cards = sourceSections.Distinct().SelectMany(section => this[section]);
-        var rand = new Random();
-        this[targetSection] = cards.OrderBy(x => rand.Next());
-        OnSectionChanged?.Invoke(targetSection, this[targetSection]);
-        foreach (var sec in sourceSections)
+    public void ShuffleIntoFromSections(Section targetSection, params Section[] sourceSections)
+    {        
+        var cards = sourceSections.Where(s => s != targetSection).Distinct().SelectMany(section => this[section]);
+        var rand = new System.Random();
+        this[targetSection] = this[targetSection].Concat(cards).OrderBy(x => rand.Next());
+        foreach (var sec in sourceSections.Where(s => s != targetSection))
+        {
+            this[sec] = new CardBase[0];
             OnSectionChanged?.Invoke(sec, this[sec]);
+        }
+        OnSectionChanged?.Invoke(targetSection, this[targetSection]);
     }
 
-    public void MoveInto(T card, Section destination)
+    public void MoveInto(CardBase card, Section destination)
     {
-        Section sourceSection;
+        Section sourceSection = default;
+        bool foundSource = false;
         foreach (Section section in Enum.GetValues(typeof(Section)))
         {
             sourceSection = section;
             if (this[section].Contains(card))
+            {
+                foundSource = true;
                 break;
+            }
         }
+        if (!foundSource)
+            return;
+        this[sourceSection] = this[sourceSection].Where(x => x != card);
+        OnSectionChanged?.Invoke(sourceSection, this[sourceSection]);
+        this[destination] = this[destination].Concat(new CardBase[] { card });
+        OnSectionChanged?.Invoke(destination, this[destination]);
     }
 
-    public T[] DrawCards(int count = 1)
+    public CardBase[] DrawCards(int count = 1, bool autoRefreshFromDP = false)
     {
-        var dp = new Queue<T>(DrawPile);
-        var cards = new List<T>();
-        for (int i = 0; i < count; i++)
-            cards.Add(dp.Dequeue());
+        var dp = new Queue<CardBase>(DrawPile);
+        var drawnCards = new List<CardBase>();
+        var toDraw = Mathf.Min(dp.Count, count);
+        for (int i = 0; i < toDraw; i++)
+            drawnCards.Add(dp.Dequeue());
         DrawPile = dp.ToArray();
-        Hand = Hand.Concat(cards).ToArray();
-        return cards.ToArray();
+        Hand = Hand.Concat(drawnCards).ToArray();
+        if (drawnCards.Count < count && autoRefreshFromDP)
+        {
+            ShuffleIntoFromSections(Section.DrawPile, Section.DiscardPile);
+            DrawCards(count - drawnCards.Count, false);
+        }        
+        return drawnCards.ToArray();
     }
 
-    public void DiscardCards(params T[] cards)
+    public void DiscardCards(params CardBase[] cards)
     {
-        var hand = new List<T>(Hand);
+        var hand = new List<CardBase>(Hand);
         foreach (var card in cards)
             hand.Remove(card);
         Hand = hand.ToArray();
         DiscardPile = DiscardPile.Concat(cards).ToArray();
     }
-    public T[] DiscardEntireHand()
+    public CardBase[] DiscardEntireHand()
     {
         var cards = Hand;
         DiscardCards(cards);
         return cards;
     }
 
-    public void RemoveCardsFromDeck(params T[] cards)
+    public void RemoveCardsFromDeck(params CardBase[] cards)
     {
         foreach (Section section in Enum.GetValues(typeof(Section)))
         {
@@ -106,4 +133,11 @@ public class Deck<T> where T : CardBase
         }
     }
 
+    public void PlayCard(CardBase card)
+    {
+        if (!card.CanPlay())
+            return;
+        card.OnPlay();
+        MoveInto(card, Section.DiscardPile);
+    }
 }

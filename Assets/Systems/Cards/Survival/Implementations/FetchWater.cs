@@ -8,4 +8,7 @@ public class FetchWater : SurvivalCard
     {
         PlayerResources.Water += Random.Range(1, 3);
     }
+    
+    public override string Name => "Fetch Water";
+    public override string Description => "+1-3 Water";
 }
